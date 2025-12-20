@@ -29,7 +29,8 @@
     "mssql": "^10.0.4",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
-    "passport-azure-ad": "^4.3.5"
+    "passport-azure-ad": "^4.3.5",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
