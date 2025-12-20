@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { MsalProvider, useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { InteractionStatus } from '@azure/msal-browser';
 import './App.css';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
@@ -14,9 +16,13 @@ import CandidatePipeline from './components/CandidatePipeline';
 import InterviewScheduling from './components/InterviewScheduling';
 import InterviewFeedback from './components/InterviewFeedback';
 import OfferManagement from './components/OfferManagement';
+import AzureLogin from './components/AzureLogin';
 import * as api from './services/api';
+import { msalInstance, loginRequest } from './authConfig';
 
-function App() {
+function Dashboard() {
+  const { instance, inProgress } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
   const [stats, setStats] = useState(null);
   const [activities, setActivities] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -26,27 +32,50 @@ function App() {
   const [showResumeScreening, setShowResumeScreening] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (isAuthenticated) {
+      fetchDashboardData();
+      getUserInfo();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const getUserInfo = async () => {
+    const accounts = instance.getAllAccounts();
+    if (accounts.length > 0) {
+      const account = accounts[0];
+      setUser({
+        name: account.name || account.username,
+        email: account.username,
+        role: 'Recruiter'
+      });
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsData, activitiesData, notificationsData, userData] = await Promise.all([
+      const [statsData, activitiesData, notificationsData] = await Promise.all([
         api.getStats(),
         api.getActivities(),
-        api.getNotifications(),
-        api.getUser()
+        api.getNotifications()
       ]);
 
       setStats(statsData);
       setActivities(activitiesData);
       setNotifications(notificationsData);
-      setUser(userData);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      await instance.loginPopup(loginRequest);
+    } catch (error) {
+      console.error('Login error:', error);
     }
   };
 
@@ -68,7 +97,12 @@ function App() {
     }
   };
 
-  if (loading) {
+  // Show login screen if not authenticated
+  if (!isAuthenticated && inProgress === InteractionStatus.None) {
+    return <AzureLogin onLogin={handleLogin} />;
+  }
+
+  if (loading || inProgress !== InteractionStatus.None) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -189,6 +223,14 @@ function App() {
         <DemoMode />
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <MsalProvider instance={msalInstance}>
+      <Dashboard />
+    </MsalProvider>
   );
 }
 
