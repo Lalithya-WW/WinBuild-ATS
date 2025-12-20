@@ -203,7 +203,7 @@ const JobCreation = ({ onBack }) => {
       <div className="job-creation-header">
         {onBack && (
           <button className="back-button" onClick={onBack}>
-            ← Back to Dashboard
+            ← Back to Jobs
           </button>
         )}
         <h1>Create New Job</h1>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, MapPin, Calendar, Trash2, Edit } from 'lucide-react';
+import { Briefcase, MapPin, Calendar, Trash2, Edit, Plus } from 'lucide-react';
 import * as api from '../services/api';
 import './JobsList.css';
 
-const JobsList = () => {
+const JobsList = ({ onCreateJob }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,8 +49,14 @@ const JobsList = () => {
   return (
     <div className="jobs-list">
       <div className="section-header">
-        <h2 className="section-title">Open Jobs</h2>
-        <p className="section-subtitle">Manage job postings</p>
+        <div>
+          <h2 className="section-title">Open Jobs</h2>
+          <p className="section-subtitle">Manage job postings</p>
+        </div>
+        <button className="btn-create-job" onClick={onCreateJob}>
+          <Plus size={20} />
+          Create Job
+        </button>
       </div>
 
       {jobs.length === 0 ? (

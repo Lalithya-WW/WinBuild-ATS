@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Mail, Phone, MapPin, Trash2, Edit } from 'lucide-react';
+import { Users, Mail, Phone, MapPin, Trash2, Edit, UserPlus } from 'lucide-react';
 import * as api from '../services/api';
 import './CandidatesList.css';
 
-const CandidatesList = () => {
+const CandidatesList = ({ onAddCandidate }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +41,14 @@ const CandidatesList = () => {
   return (
     <div className="candidates-list">
       <div className="section-header">
-        <h2 className="section-title">Candidates</h2>
-        <p className="section-subtitle">Manage candidate applications</p>
+        <div>
+          <h2 className="section-title">Candidates</h2>
+          <p className="section-subtitle">Manage candidate applications</p>
+        </div>
+        <button className="btn-add-candidate" onClick={onAddCandidate}>
+          <UserPlus size={20} />
+          Add New Candidate
+        </button>
       </div>
 
       <div className="candidates-table">

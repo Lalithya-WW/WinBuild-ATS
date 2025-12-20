@@ -141,12 +141,6 @@ function Dashboard() {
             Jobs
           </button>
           <button 
-            className={`tab ${activeTab === 'createJob' ? 'active' : ''}`}
-            onClick={() => setActiveTab('createJob')}
-          >
-            Create Job
-          </button>
-          <button 
             className={`tab ${activeTab === 'candidates' ? 'active' : ''}`}
             onClick={() => setActiveTab('candidates')}
           >
@@ -197,12 +191,6 @@ function Dashboard() {
           >
             Analytics
           </button>
-          <button 
-            className={`tab ${activeTab === 'uploadResume' ? 'active' : ''}`}
-            onClick={() => setActiveTab('uploadResume')}
-          >
-            Upload Resume
-          </button>
         </div>
 
         {activeTab === 'dashboard' && (
@@ -225,10 +213,10 @@ function Dashboard() {
           </>
         )}
 
-        {activeTab === 'jobs' && <JobsList />}
+        {activeTab === 'jobs' && <JobsList onCreateJob={() => setActiveTab('createJob')} />}
         {activeTab === 'createJob' && (
           <JobCreation 
-            onBack={() => setActiveTab('dashboard')}
+            onBack={() => setActiveTab('jobs')}
           />
         )}
         {activeTab === 'analytics' && (
@@ -236,7 +224,7 @@ function Dashboard() {
             onBack={() => setActiveTab('dashboard')}
           />
         )}
-        {activeTab === 'candidates' && <CandidatesList />}
+        {activeTab === 'candidates' && <CandidatesList onAddCandidate={() => setActiveTab('uploadResume')} />}
         {activeTab === 'interviews' && <InterviewScheduling />}
         {activeTab === 'pipeline' && <CandidatePipeline />}
         {activeTab === 'feedback' && (
