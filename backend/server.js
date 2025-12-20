@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -38,6 +38,10 @@ app.use(passport.session());
 
 // Auth routes
 app.use('/auth', authRoutes);
+
+// Resume upload routes
+const resumeRoutes = require('./routes/resumes');
+app.use('/api/resumes', resumeRoutes);
 
 // Resume Screening Routes
 const resumeScreeningRoutes = require('./Resume Screening/resumeScreeningRoutes');

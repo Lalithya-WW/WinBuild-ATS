@@ -88,7 +88,9 @@ CREATE TABLE dbo.Jobs (
     createdBy INT,
     updatedBy INT,
     createdAt DATETIME DEFAULT GETDATE(),
-    updatedAt DATETIME DEFAULT GETDATE()
+    updatedAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (createdBy) REFERENCES dbo.Users(id),
+    FOREIGN KEY (updatedBy) REFERENCES dbo.Users(id)
 );
 PRINT 'Created Jobs table';
 GO
@@ -101,11 +103,13 @@ CREATE TABLE dbo.Candidates (
     phone NVARCHAR(50),
     position NVARCHAR(255),
     status NVARCHAR(50) DEFAULT 'active',
-    resumePath NVARCHAR(500),
+    resumePath NVARCHAR(1000), -- Azure Blob Storage URL
     createdBy INT,
     updatedBy INT,
     createdAt DATETIME DEFAULT GETDATE(),
-    updatedAt DATETIME DEFAULT GETDATE()
+    updatedAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (createdBy) REFERENCES dbo.Users(id),
+    FOREIGN KEY (updatedBy) REFERENCES dbo.Users(id)
 );
 PRINT 'Created Candidates table';
 GO
@@ -123,7 +127,10 @@ CREATE TABLE dbo.Interviews (
     createdBy INT,
     updatedBy INT,
     createdAt DATETIME DEFAULT GETDATE(),
-    updatedAt DATETIME DEFAULT GETDATE()
+    updatedAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (candidateId) REFERENCES dbo.Candidates(id),
+    FOREIGN KEY (createdBy) REFERENCES dbo.Users(id),
+    FOREIGN KEY (updatedBy) REFERENCES dbo.Users(id)
 );
 PRINT 'Created Interviews table';
 GO
@@ -136,7 +143,8 @@ CREATE TABLE dbo.Activities (
     description NVARCHAR(MAX),
     icon NVARCHAR(50),
     createdBy INT,
-    createdAt DATETIME DEFAULT GETDATE()
+    createdAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (createdBy) REFERENCES dbo.Users(id)
 );
 PRINT 'Created Activities table';
 GO
@@ -150,7 +158,8 @@ CREATE TABLE dbo.Notifications (
     priority NVARCHAR(20) DEFAULT 'medium',
     isRead BIT DEFAULT 0,
     createdBy INT,
-    createdAt DATETIME DEFAULT GETDATE()
+    createdAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (createdBy) REFERENCES dbo.Users(id)
 );
 PRINT 'Created Notifications table';
 GO

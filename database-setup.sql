@@ -34,8 +34,12 @@ BEGIN
         department NVARCHAR(255),
         location NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'open',
+        createdBy INT,
+        updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
-        updatedAt DATETIME DEFAULT GETDATE()
+        updatedAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (createdBy) REFERENCES Users(id),
+        FOREIGN KEY (updatedBy) REFERENCES Users(id)
     );
     PRINT 'Jobs table created successfully';
 END
@@ -53,9 +57,13 @@ BEGIN
         phone NVARCHAR(50),
         position NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'active',
-        resumePath NVARCHAR(500),
+        resumePath NVARCHAR(1000), -- Azure Blob Storage URL
+        createdBy INT,
+        updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
-        updatedAt DATETIME DEFAULT GETDATE()
+        updatedAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (createdBy) REFERENCES Users(id),
+        FOREIGN KEY (updatedBy) REFERENCES Users(id)
     );
     PRINT 'Candidates table created successfully';
 END
@@ -75,7 +83,13 @@ BEGIN
         interviewType NVARCHAR(100),
         status NVARCHAR(50) DEFAULT 'scheduled',
         feedback NVARCHAR(MAX),
-        createdAt DATETIME DEFAULT GETDATE()
+        createdBy INT,
+        updatedBy INT,
+        createdAt DATETIME DEFAULT GETDATE(),
+        updatedAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (candidateId) REFERENCES Candidates(id),
+        FOREIGN KEY (createdBy) REFERENCES Users(id),
+        FOREIGN KEY (updatedBy) REFERENCES Users(id)
     );
     PRINT 'Interviews table created successfully';
 END
@@ -92,7 +106,9 @@ BEGIN
         title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         icon NVARCHAR(50),
-        createdAt DATETIME DEFAULT GETDATE()
+        createdBy INT,
+        createdAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (createdBy) REFERENCES Users(id)
     );
     PRINT 'Activities table created successfully';
 END
@@ -110,7 +126,9 @@ BEGIN
         description NVARCHAR(MAX),
         priority NVARCHAR(20) DEFAULT 'medium',
         isRead BIT DEFAULT 0,
-        createdAt DATETIME DEFAULT GETDATE()
+        createdBy INT,
+        createdAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (createdBy) REFERENCES Users(id)
     );
     PRINT 'Notifications table created successfully';
 END

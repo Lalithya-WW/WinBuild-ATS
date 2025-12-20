@@ -83,7 +83,7 @@ async function initializeDatabase() {
         phone NVARCHAR(50),
         position NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'active',
-        resumePath NVARCHAR(500),
+        resumePath NVARCHAR(1000),
         createdBy INT,
         updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
@@ -114,10 +114,10 @@ async function initializeDatabase() {
       CREATE TABLE Activities (
         id INT IDENTITY(1,1) PRIMARY KEY,
         type NVARCHAR(50) NOT NULL,
-        title NBy INT,
-        createdVARCHAR(255) NOT NULL,
+        title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         icon NVARCHAR(50),
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);
@@ -130,8 +130,8 @@ async function initializeDatabase() {
         title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         priority NVARCHAR(20) DEFAULT 'medium',
-        isRead By INT,
-        createdBIT DEFAULT 0,
+        isRead BIT DEFAULT 0,
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);
