@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { uploadFileToBlob, deleteFileFromBlob } = require('../config/azureStorage');
 const { getConnection } = require('../config/database');
+const { sendApplicationConfirmation } = require('../config/sendgrid');
 
 const router = express.Router();
 
@@ -72,6 +73,21 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
         INSERT INTO Activities (type, title, description, icon)
         VALUES ('upload', @title, @description, 'upload')
       `);
+
+    // Send application confirmation email if email is provided
+    if (email) {
+      try {
+        await sendApplicationConfirmation({
+          candidateName,
+          candidateEmail: email,
+          position
+        });
+        console.log(`✅ Application confirmation email sent to ${email}`);
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError.message);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.status(201).json({
       success: true,
