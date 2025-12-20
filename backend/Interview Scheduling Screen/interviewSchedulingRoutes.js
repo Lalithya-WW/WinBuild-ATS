@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const { sendInterviewInvitation } = require('../config/sendgrid');
+const { getConnection } = require('../config/database');
+const sql = require('mssql');
 
 // Store scheduled interviews in memory (in production, use a database)
 let scheduledInterviews = [
@@ -185,7 +188,7 @@ router.get('/scheduled', (req, res) => {
 });
 
 // Schedule a new interview
-router.post('/schedule', (req, res) => {
+router.post('/schedule', async (req, res) => {
   try {
     const { 
       candidateName, 
@@ -198,6 +201,13 @@ router.post('/schedule', (req, res) => {
       panelMembers: selectedPanelMembers,
       additionalNotes 
     } = req.body;
+
+    // Validate required fields
+    if (!candidateName || !jobPosition || !date || !time) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: candidateName, jobPosition, date, time' 
+      });
+    }
 
     const newInterview = {
       id: scheduledInterviews.length + 1,
@@ -215,9 +225,71 @@ router.post('/schedule', (req, res) => {
 
     scheduledInterviews.unshift(newInterview);
 
+    // Prepare interview date/time for email
+    const interviewDateTime = new Date(`${date} ${time}`);
+    
+    // Generate meeting link if location is Zoom or online
+    let meetingLink = null;
+    if (location && (location.toLowerCase().includes('zoom') || location.toLowerCase().includes('online'))) {
+      meetingLink = `https://zoom.us/j/${Math.floor(Math.random() * 1000000000)}`; // Mock Zoom link
+    }
+
+    // Save to database if connection available
+    try {
+      const pool = await getConnection();
+      await pool.request()
+        .input('candidateName', sql.NVarChar, candidateName)
+        .input('position', sql.NVarChar, jobPosition)
+        .input('scheduleDate', sql.DateTime, interviewDateTime)
+        .input('interviewType', sql.NVarChar, interviewType || 'Interview')
+        .input('status', sql.NVarChar, 'scheduled')
+        .query(`
+          INSERT INTO Interviews (candidateName, position, scheduleDate, interviewType, status, createdAt)
+          VALUES (@candidateName, @position, @scheduleDate, @interviewType, @status, GETDATE())
+        `);
+
+      // Log activity
+      await pool.request()
+        .input('type', sql.NVarChar, 'interview_scheduled')
+        .input('title', sql.NVarChar, 'Interview Scheduled')
+        .input('description', sql.NVarChar, `${candidateName} scheduled for ${jobPosition} on ${date} at ${time}`)
+        .input('icon', sql.NVarChar, '📅')
+        .query(`
+          INSERT INTO Activities (type, title, description, icon, createdAt)
+          VALUES (@type, @title, @description, @icon, GETDATE())
+        `);
+    } catch (dbError) {
+      console.error('Database save failed (continuing with in-memory):', dbError.message);
+    }
+
+    // Send interview invitation email if email is provided
+    if (candidateEmail) {
+      try {
+        await sendInterviewInvitation({
+          candidateName,
+          candidateEmail,
+          position: jobPosition,
+          interviewDate: interviewDateTime,
+          interviewType: interviewType || 'Interview',
+          meetingLink
+        });
+        
+        console.log(`✅ Interview invitation email sent to ${candidateEmail}`);
+        
+        // Add meeting link to response
+        newInterview.meetingLink = meetingLink;
+        newInterview.emailSent = true;
+      } catch (emailError) {
+        console.error('Failed to send interview invitation email:', emailError.message);
+        newInterview.emailSent = false;
+        newInterview.emailError = emailError.message;
+      }
+    }
+
     res.status(201).json({
       message: 'Interview scheduled successfully',
-      interview: newInterview
+      interview: newInterview,
+      emailSent: candidateEmail ? newInterview.emailSent : false
     });
   } catch (error) {
     console.error('Error scheduling interview:', error);

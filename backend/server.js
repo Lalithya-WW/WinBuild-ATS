@@ -43,6 +43,10 @@ app.use('/auth', authRoutes);
 const resumeRoutes = require('./routes/resumes');
 app.use('/api/resumes', resumeRoutes);
 
+// Email routes
+const emailRoutes = require('./routes/emails');
+app.use('/api/emails', emailRoutes);
+
 // Resume Screening Routes
 const resumeScreeningRoutes = require('./Resume Screening/resumeScreeningRoutes');
 app.use('/api/resume-screening', resumeScreeningRoutes);
