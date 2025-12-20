@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ResumeUpload.css';
 
-const ResumeUpload = ({ onUploadSuccess }) => {
+const ResumeUpload = ({ onUploadSuccess, onBack }) => {
   const [formData, setFormData] = useState({
     candidateName: '',
     email: '',
@@ -108,7 +108,14 @@ const ResumeUpload = ({ onUploadSuccess }) => {
 
   return (
     <div className="resume-upload-container">
-      <h2>Upload Resume</h2>
+      <div className="resume-upload-header">
+        {onBack && (
+          <button className="back-button" onClick={onBack}>
+            ← Back to Candidates
+          </button>
+        )}
+        <h2>Upload Resume</h2>
+      </div>
       
       {error && (
         <div className="alert alert-error">

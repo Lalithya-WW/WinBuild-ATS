@@ -48,7 +48,15 @@
   color: #1a1a1a;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
+}
+
+.logo-win {
+  color: #3b82f6;
+}
+
+.logo-ats {
+  color: #dc2626;
 }
 
 .ats-badge {

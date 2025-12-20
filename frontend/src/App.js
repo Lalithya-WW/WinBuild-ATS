@@ -123,7 +123,7 @@ function Dashboard() {
         <div className="welcome-section">
           <h1 className="welcome-title">Welcome back, {user?.name}!</h1>
           <p className="welcome-subtitle">
-            You're logged in as <strong>{user?.role}</strong>. Here's your dashboard overview for today.
+            Here's your dashboard overview for today.
           </p>
         </div>
 
@@ -195,14 +195,10 @@ function Dashboard() {
 
         {activeTab === 'dashboard' && (
           <>
-            <StatsCards stats={stats} />
+            <StatsCards stats={stats} onNavigate={(page) => setActiveTab(page)} />
 
             <div className="dashboard-grid">
               <div className="left-column">
-                <QuickActions 
-                  onCreateJob={handleCreateJob}
-                  onUploadResume={handleUploadResume}
-                />
                 <RecentActivity activities={activities} />
               </div>
 
@@ -257,6 +253,7 @@ function Dashboard() {
               setActiveTab('candidates');
               fetchDashboardData();
             }}
+            onBack={() => setActiveTab('candidates')}
           />
         )}
 

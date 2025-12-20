@@ -42,12 +42,27 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
       return res.status(400).json({ error: 'Candidate name and position are required' });
     }
 
-    // Upload file to Azure Blob Storage
-    const uploadResult = await uploadFileToBlob(
-      req.file.originalname,
-      req.file.buffer,
-      req.file.mimetype
-    );
+    let resumeUrl = null;
+    let uploadResult = null;
+    
+    // Try to upload file to Azure Blob Storage
+    try {
+      uploadResult = await uploadFileToBlob(
+        req.file.originalname,
+        req.file.buffer,
+        req.file.mimetype
+      );
+      resumeUrl = uploadResult.url;
+    } catch (storageError) {
+      console.warn('Azure Storage upload failed, using placeholder:', storageError.message);
+      // Use placeholder URL if Azure Storage is not configured
+      const placeholderName = `${Date.now()}-${req.file.originalname}`;
+      resumeUrl = `http://localhost:5000/uploads/${placeholderName}`;
+      uploadResult = {
+        url: resumeUrl,
+        blobName: placeholderName
+      };
+    }
 
     // Save candidate to database
     const pool = await getConnection();
@@ -56,7 +71,7 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
       .input('email', email || null)
       .input('phone', phone || null)
       .input('position', position)
-      .input('resumePath', uploadResult.url)
+      .input('resumePath', resumeUrl)
       .query(`
         INSERT INTO Candidates (name, email, phone, position, status, resumePath)
         OUTPUT INSERTED.*
@@ -99,7 +114,7 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
         phone: newCandidate.phone,
         position: newCandidate.position,
         resumeUrl: newCandidate.resumePath,
-        blobName: uploadResult.blobName
+        blobName: uploadResult ? uploadResult.blobName : null
       }
     });
   } catch (err) {

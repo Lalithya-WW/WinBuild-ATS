@@ -63,9 +63,9 @@ app.use('/api/interview-scheduling', interviewSchedulingRoutes);
 const interviewFeedbackRoutes = require('./Interview Feedback/interviewFeedbackRoutes');
 app.use('/api/interview-feedback', interviewFeedbackRoutes);
 
-// Offer Management Routes - temporarily disabled due to syntax error
-// const offerManagementRoutes = require('./Offer Management/offerManagementRoutes');
-// app.use('/api/offers', offerManagementRoutes);
+// Offer Management Routes
+const offerManagementRoutes = require('./Offer Management/offerManagementRoutes');
+app.use('/api/offers', offerManagementRoutes);
 
 // Onboarding Routes
 const onboardingRoutes = require('./routes/onboarding');

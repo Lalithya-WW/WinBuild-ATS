@@ -18,9 +18,10 @@ const Header = ({ user }) => {
       <div className="header-content">
         <div className="logo-section">
           <div className="logo">
-            <div className="logo-icon">W</div>
             <div className="logo-text">
-              <div className="logo-title">WinWire <span className="ats-badge">ATS</span></div>
+              <div className="logo-title">
+                <span className="logo-win">Win</span><span className="logo-ats">ATS</span>
+              </div>
               <div className="logo-subtitle">Applicant Tracking System</div>
             </div>
           </div>
@@ -35,8 +36,6 @@ const Header = ({ user }) => {
           <div className="user-info">
             <span className="user-email">{user?.email || 'user@winwire.com'}</span>
           </div>
-
-          <button className="recruiter-btn">Recruiter</button>
 
           <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={18} />

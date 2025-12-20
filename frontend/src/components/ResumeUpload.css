@@ -7,8 +7,30 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.resume-upload-header {
+  margin-bottom: 24px;
+}
+
+.resume-upload-header .back-button {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.resume-upload-header .back-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
 .resume-upload-container h2 {
-  margin: 0 0 24px 0;
+  margin: 0;
   font-size: 24px;
   color: #1a1a1a;
 }

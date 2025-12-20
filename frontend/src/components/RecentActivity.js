@@ -48,12 +48,11 @@ const RecentActivity = ({ activities }) => {
           <h2 className="section-title">Recent Activity</h2>
           <p className="section-subtitle">Latest updates and actions</p>
         </div>
-        <button className="view-all-btn">View All</button>
       </div>
 
       <div className="activity-list">
         {activities && activities.length > 0 ? (
-          activities.map((activity) => (
+          activities.slice(0, 4).map((activity) => (
             <div key={activity.id} className="activity-item">
               <div 
                 className="activity-icon" 
