@@ -2,25 +2,58 @@ const express = require('express');
 const passport = require('passport');
 const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 const azureAdConfig = require('../config/azureAd');
+const { getConnection } = require('../config/database');
 
 const router = express.Router();
 
 // Configure Passport to use Azure AD
-passport.use(new OIDCStrategy(azureAdConfig, (iss, sub, profile, accessToken, refreshToken, done) => {
+passport.use(new OIDCStrategy(azureAdConfig, async (iss, sub, profile, accessToken, refreshToken, done) => {
   if (!profile.oid) {
     return done(new Error('No OID found in user profile.'));
   }
 
-  // Here you can save user to database or session
-  const user = {
-    id: profile.oid,
-    email: profile._json.email || profile._json.preferred_username,
-    name: profile.displayName,
-    firstName: profile.name?.givenName,
-    lastName: profile.name?.familyName
-  };
+  try {
+    // Create user object
+    const user = {
+      id: profile.oid,
+      email: profile._json.email || profile._json.preferred_username,
+      name: profile.displayName,
+      firstName: profile.name?.givenName,
+      lastName: profile.name?.familyName
+    };
 
-  return done(null, user);
+    // Save user to database
+    const pool = await getConnection();
+    
+    // Check if user exists
+    const existingUser = await pool.request()
+      .input('azureId', user.id)
+      .query('SELECT * FROM Users WHERE azureId = @azureId');
+    
+    if (existingUser.recordset.length > 0) {
+      // Update last login
+      await pool.request()
+        .input('azureId', user.id)
+        .query('UPDATE Users SET lastLogin = GETDATE(), updatedAt = GETDATE() WHERE azureId = @azureId');
+    } else {
+      // Insert new user
+      await pool.request()
+        .input('azureId', user.id)
+        .input('email', user.email)
+        .input('name', user.name)
+        .input('firstName', user.firstName)
+        .input('lastName', user.lastName)
+        .query(`
+          INSERT INTO Users (azureId, email, name, firstName, lastName, role, lastLogin)
+          VALUES (@azureId, @email, @name, @firstName, @lastName, 'Recruiter', GETDATE())
+        `);
+    }
+
+    return done(null, user);
+  } catch (error) {
+    console.error('Error saving user to database:', error);
+    return done(null, user); // Continue even if DB save fails
+  }
 }));
 
 // Serialize user for the session
@@ -54,12 +87,41 @@ router.post('/callback',
 );
 
 // Get current user
-router.get('/user', (req, res) => {
+router.get('/user', async (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({
-      authenticated: true,
-      user: req.user
-    });
+    try {
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('azureId', req.user.id)
+        .query('SELECT azureId, email, name, firstName, lastName, role, lastLogin FROM Users WHERE azureId = @azureId');
+      
+      if (result.recordset.length > 0) {
+        const dbUser = result.recordset[0];
+        res.json({
+          authenticated: true,
+          user: {
+            id: dbUser.azureId,
+            email: dbUser.email,
+            name: dbUser.name,
+            firstName: dbUser.firstName,
+            lastName: dbUser.lastName,
+            role: dbUser.role,
+            lastLogin: dbUser.lastLogin
+          }
+        });
+      } else {
+        res.json({
+          authenticated: true,
+          user: req.user
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user from database:', error);
+      res.json({
+        authenticated: true,
+        user: req.user
+      });
+    }
   } else {
     res.json({
       authenticated: false,
