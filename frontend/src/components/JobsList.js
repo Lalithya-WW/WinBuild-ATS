@@ -15,9 +15,17 @@ const JobsList = () => {
     try {
       setLoading(true);
       const data = await api.getJobs();
-      setJobs(data);
+      // Ensure jobs is always an array
+      if (data && data.jobs && Array.isArray(data.jobs)) {
+        setJobs(data.jobs);
+      } else if (Array.isArray(data)) {
+        setJobs(data);
+      } else {
+        setJobs([]);
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -45,31 +53,36 @@ const JobsList = () => {
         <p className="section-subtitle">Manage job postings</p>
       </div>
 
-      <div className="jobs-grid">
-        {jobs.map((job) => (
-          <div key={job.id} className="job-card">
-            <div className="job-header">
-              <div className="job-icon">
-                <Briefcase size={20} />
+      {jobs.length === 0 ? (
+        <div className="no-jobs">
+          <p>No jobs found. Create your first job posting!</p>
+        </div>
+      ) : (
+        <div className="jobs-grid">
+          {jobs.map((job) => (
+            <div key={job.id} className="job-card">
+              <div className="job-header">
+                <div className="job-icon">
+                  <Briefcase size={20} />
+                </div>
+                <span className={`job-status ${job.status}`}>{job.status}</span>
               </div>
-              <span className={`job-status ${job.status}`}>{job.status}</span>
-            </div>
-            
-            <h3 className="job-title">{job.title}</h3>
-            
-            <div className="job-details">
-              <div className="job-detail">
-                <MapPin size={16} />
-                <span>{job.location}</span>
-              </div>
-              <div className="job-detail">
-                <Briefcase size={16} />
-                <span>{job.department}</span>
-              </div>
-              <div className="job-detail">
-                <Calendar size={16} />
-                <span>{new Date(job.createdAt).toLocaleDateString()}</span>
-              </div>
+              
+              <h3 className="job-title">{job.title}</h3>
+              
+              <div className="job-details">
+                <div className="job-detail">
+                  <MapPin size={16} />
+                  <span>{job.location}</span>
+                </div>
+                <div className="job-detail">
+                  <Briefcase size={16} />
+                  <span>{job.department}</span>
+                </div>
+                <div className="job-detail">
+                  <Calendar size={16} />
+                  <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                </div>
             </div>
 
             <div className="job-actions">
@@ -85,6 +98,7 @@ const JobsList = () => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };

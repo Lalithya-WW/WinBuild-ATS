@@ -16,6 +16,8 @@ import CandidatePipeline from './components/CandidatePipeline';
 import InterviewScheduling from './components/InterviewScheduling';
 import InterviewFeedback from './components/InterviewFeedback';
 import OfferManagement from './components/OfferManagement';
+import JobCreation from './components/JobCreation';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import AzureLogin from './components/AzureLogin';
 import * as api from './services/api';
 import { msalInstance, loginRequest } from './authConfig';
@@ -137,6 +139,12 @@ function Dashboard() {
             Jobs
           </button>
           <button 
+            className={`tab ${activeTab === 'createJob' ? 'active' : ''}`}
+            onClick={() => setActiveTab('createJob')}
+          >
+            Create Job
+          </button>
+          <button 
             className={`tab ${activeTab === 'candidates' ? 'active' : ''}`}
             onClick={() => setActiveTab('candidates')}
           >
@@ -175,6 +183,12 @@ function Dashboard() {
           >
             Offer Management
           </button>
+          <button 
+            className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </button>
         </div>
 
         {activeTab === 'dashboard' && (
@@ -198,6 +212,16 @@ function Dashboard() {
         )}
 
         {activeTab === 'jobs' && <JobsList />}
+        {activeTab === 'createJob' && (
+          <JobCreation 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
+        {activeTab === 'analytics' && (
+          <AnalyticsDashboard 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
         {activeTab === 'candidates' && <CandidatesList />}
         {activeTab === 'interviews' && <InterviewScheduling />}
         {activeTab === 'pipeline' && <CandidatePipeline />}

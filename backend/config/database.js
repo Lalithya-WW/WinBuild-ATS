@@ -66,7 +66,12 @@ async function initializeDatabase() {
         title NVARCHAR(255) NOT NULL,
         department NVARCHAR(255),
         location NVARCHAR(255),
+        employment_type NVARCHAR(100),
+        description NVARCHAR(MAX),
+        required_skills NVARCHAR(MAX),
+        experience_range NVARCHAR(100),
         status NVARCHAR(50) DEFAULT 'open',
+        posted_date DATETIME DEFAULT GETDATE(),
         createdBy INT,
         updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
@@ -114,10 +119,10 @@ async function initializeDatabase() {
       CREATE TABLE Activities (
         id INT IDENTITY(1,1) PRIMARY KEY,
         type NVARCHAR(50) NOT NULL,
-        title NBy INT,
-        createdVARCHAR(255) NOT NULL,
+        title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         icon NVARCHAR(50),
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);
@@ -130,8 +135,8 @@ async function initializeDatabase() {
         title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         priority NVARCHAR(20) DEFAULT 'medium',
-        isRead By INT,
-        createdBIT DEFAULT 0,
+        isRead BIT DEFAULT 0,
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);
@@ -153,14 +158,22 @@ async function insertSampleData(pool) {
     const jobCount = await pool.request().query('SELECT COUNT(*) as count FROM Jobs');
     
     if (jobCount.recordset[0].count === 0) {
-      // Insert sample jobs
+      // Insert sample jobs with all required columns
       await pool.request().query(`
-        INSERT INTO Jobs (title, department, location, status)
+        INSERT INTO Jobs (title, department, location, employment_type, description, required_skills, experience_range, status, posted_date)
         VALUES 
-          ('Senior Software Engineer', 'Engineering', 'San Francisco, CA', 'open'),
-          ('Product Manager', 'Product', 'New York, NY', 'open'),
-          ('UX Designer', 'Design', 'Remote', 'open'),
-          ('Technical Writer', 'Documentation', 'Austin, TX', 'open')
+          ('Senior Software Engineer', 'Engineering', 'San Francisco, CA', 'Full-time', 
+           'We are looking for an experienced Senior Software Engineer to join our team and lead development of cutting-edge applications.', 
+           '["JavaScript", "React", "Node.js", "SQL"]', '5-7 years', 'open', GETDATE()),
+          ('Product Manager', 'Product', 'New York, NY', 'Full-time',
+           'Lead product strategy and roadmap development for our flagship products. Work cross-functionally with engineering and design teams.',
+           '["Product Management", "Agile", "Analytics", "Stakeholder Management"]', '3-5 years', 'open', GETDATE()),
+          ('UX Designer', 'Design', 'Remote', 'Full-time',
+           'Create beautiful and intuitive user experiences for our web and mobile applications. Conduct user research and usability testing.',
+           '["UI/UX Design", "Figma", "User Research", "Prototyping"]', '3-5 years', 'open', GETDATE()),
+          ('Technical Writer', 'Documentation', 'Austin, TX', 'Contract',
+           'Develop comprehensive documentation for our API and products. Create tutorials, guides, and reference materials for developers.',
+           '["Technical Writing", "API Documentation", "Markdown", "Git"]', '1-3 years', 'open', GETDATE())
       `);
 
       // Insert sample candidates
