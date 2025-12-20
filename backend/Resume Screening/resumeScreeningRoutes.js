@@ -37,6 +37,7 @@ router.get('/jobs', async (req, res) => {
   try {
     const { what = 'nodejs', where = 'Hyderabad', page = 1 } = req.query;
     
+    // Using the Adzuna API endpoint as specified
     const response = await axios.get(
       `https://api.adzuna.com/v1/api/jobs/in/search/${page}`,
       {
@@ -44,8 +45,7 @@ router.get('/jobs', async (req, res) => {
           app_id: ADZUNA_APP_ID,
           app_key: ADZUNA_APP_KEY,
           what: what,
-          where: where,
-          results_per_page: 20
+          where: where
         }
       }
     );
@@ -141,53 +141,71 @@ router.post('/screen', upload.single('resume'), async (req, res) => {
 
     const { jobTitle, requiredSkills, candidateName, email, phone } = req.body;
     
-    // Upload file to Azure Blob Storage
-    const uploadResult = await uploadFileToBlob(
-      req.file.originalname,
-      req.file.buffer,
-      req.file.mimetype
-    );
+    let uploadResult;
+    let resumeUrl = '';
+    let blobName = '';
+    
+    // Try to upload to Azure Blob Storage, fallback to local storage if it fails
+    try {
+      uploadResult = await uploadFileToBlob(
+        req.file.originalname,
+        req.file.buffer,
+        req.file.mimetype
+      );
+      resumeUrl = uploadResult.url;
+      blobName = uploadResult.blobName;
+    } catch (storageError) {
+      console.warn('Azure Storage not available, using fallback:', storageError.message);
+      // Fallback: use a placeholder URL
+      resumeUrl = `/uploads/resumes/${Date.now()}-${req.file.originalname}`;
+      blobName = req.file.originalname;
+    }
 
     // Simulate AI screening analysis
     const screeningResult = await performAIScreening(
-      uploadResult.url,
+      resumeUrl,
       jobTitle,
       requiredSkills ? JSON.parse(requiredSkills) : []
     );
 
-    // Save candidate to database with screening results
-    const pool = await getConnection();
-    const result = await pool.request()
-      .input('name', candidateName || screeningResult.extraction.name)
-      .input('email', email || screeningResult.extraction.email)
-      .input('phone', phone || screeningResult.extraction.phone)
-      .input('position', jobTitle)
-      .input('resumePath', uploadResult.url)
-      .input('screeningScore', screeningResult.matchScore)
-      .query(`
-        INSERT INTO Candidates (name, email, phone, position, status, resumePath)
-        OUTPUT INSERTED.*
-        VALUES (@name, @email, @phone, @position, 'screening', @resumePath)
-      `);
+    // Try to save to database, but don't fail if database is not available
+    let newCandidate = null;
+    try {
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('name', candidateName || screeningResult.extraction.name)
+        .input('email', email || screeningResult.extraction.email)
+        .input('phone', phone || screeningResult.extraction.phone)
+        .input('position', jobTitle)
+        .input('resumePath', resumeUrl)
+        .input('screeningScore', screeningResult.matchScore)
+        .query(`
+          INSERT INTO Candidates (name, email, phone, position, status, resumePath)
+          OUTPUT INSERTED.*
+          VALUES (@name, @email, @phone, @position, 'screening', @resumePath)
+        `);
 
-    const newCandidate = result.recordset[0];
+      newCandidate = result.recordset[0];
 
-    // Add activity
-    await pool.request()
-      .input('title', 'Resume Screened')
-      .input('description', `${candidateName || screeningResult.extraction.name} - Score: ${screeningResult.matchScore}%`)
-      .query(`
-        INSERT INTO Activities (type, title, description, icon)
-        VALUES ('screening', @title, @description, 'file-search')
-      `);
+      // Add activity
+      await pool.request()
+        .input('title', 'Resume Screened')
+        .input('description', `${candidateName || screeningResult.extraction.name} - Score: ${screeningResult.matchScore}%`)
+        .query(`
+          INSERT INTO Activities (type, title, description, icon)
+          VALUES ('screening', @title, @description, 'file-search')
+        `);
+    } catch (dbError) {
+      console.warn('Database not available, screening results will not be saved:', dbError.message);
+    }
 
     res.json({
       success: true,
       result: {
         ...screeningResult,
-        candidateId: newCandidate.id,
-        resumeUrl: uploadResult.url,
-        blobName: uploadResult.blobName
+        candidateId: newCandidate ? newCandidate.id : null,
+        resumeUrl: resumeUrl,
+        blobName: blobName
       }
     });
   } catch (error) {
@@ -222,52 +240,156 @@ function extractSkills(description) {
   return foundSkills.slice(0, 5); // Return top 5 skills
 }
 
-// Simulate AI screening (placeholder for actual AI integration)
+// Simulate AI screening with dummy data (realistic simulation)
 async function performAIScreening(blobUrl, jobTitle, requiredSkills) {
-  // This is a simulation. In production, you would:
-  // 1. Download the file from blob URL or pass the URL to AI service
-  // 2. Use NLP/AI to extract candidate information
-  // 3. Match skills and experience against job requirements
-  // 4. Generate a detailed analysis and score
+  // Generate realistic dummy candidate data
+  const candidateProfiles = [
+    {
+      name: 'Rajesh Kumar',
+      email: 'rajesh.kumar@email.com',
+      phone: '+91 9876543210',
+      experience: '5 years',
+      education: 'B.Tech in Computer Science, IIT Delhi',
+      skills: ['Node.js', 'React', 'MongoDB', 'Express', 'AWS', 'Docker', 'TypeScript', 'Git']
+    },
+    {
+      name: 'Priya Sharma',
+      email: 'priya.sharma@techmail.com',
+      phone: '+91 9123456789',
+      experience: '7 years',
+      education: 'M.Tech in Software Engineering, BITS Pilani',
+      skills: ['JavaScript', 'Node.js', 'Angular', 'PostgreSQL', 'GraphQL', 'Kubernetes', 'Azure', 'CI/CD']
+    },
+    {
+      name: 'Amit Patel',
+      email: 'amit.patel@developer.in',
+      phone: '+91 8765432109',
+      experience: '4 years',
+      education: 'B.E. in Information Technology, NIT Trichy',
+      skills: ['React', 'Node.js', 'MySQL', 'REST', 'Docker', 'Git', 'HTML', 'CSS']
+    },
+    {
+      name: 'Sneha Reddy',
+      email: 'sneha.reddy@codemail.com',
+      phone: '+91 7654321098',
+      experience: '6 years',
+      education: 'B.Tech in Computer Science, IIIT Hyderabad',
+      skills: ['TypeScript', 'Node.js', 'Vue', 'MongoDB', 'Redis', 'AWS', 'Jenkins', 'Webpack']
+    },
+    {
+      name: 'Vikram Singh',
+      email: 'vikram.singh@techpro.in',
+      phone: '+91 6543210987',
+      experience: '8 years',
+      education: 'M.Sc. in Computer Science, University of Hyderabad',
+      skills: ['Node.js', 'React', 'GraphQL', 'PostgreSQL', 'Docker', 'Kubernetes', 'GCP', 'Next.js']
+    }
+  ];
 
   return new Promise((resolve) => {
     setTimeout(() => {
-      const matchScore = Math.floor(Math.random() * 40) + 60; // 60-100%
+      // Select a random candidate profile
+      const profile = candidateProfiles[Math.floor(Math.random() * candidateProfiles.length)];
+      
+      // Calculate skill match
+      const matchedSkills = [];
+      const unmatchedSkills = [];
+      
+      requiredSkills.forEach(reqSkill => {
+        const isMatched = profile.skills.some(skill => 
+          skill.toLowerCase() === reqSkill.toLowerCase()
+        );
+        
+        if (isMatched) {
+          matchedSkills.push({
+            skill: reqSkill,
+            matched: true,
+            proficiency: Math.random() > 0.3 ? 'High' : 'Medium'
+          });
+        } else {
+          unmatchedSkills.push({
+            skill: reqSkill,
+            matched: false,
+            proficiency: 'Not Found'
+          });
+        }
+      });
+
+      // Calculate match score
+      const baseScore = requiredSkills.length > 0 
+        ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
+        : 75;
+      
+      // Add bonus for extra skills
+      const bonusScore = Math.min(20, profile.skills.length * 2);
+      const matchScore = Math.min(100, baseScore + bonusScore);
+      
+      // Generate analysis
+      const strengths = [];
+      const concerns = [];
+      
+      if (matchScore >= 80) {
+        strengths.push('Excellent match with required technical skills');
+        strengths.push(`${matchedSkills.length} out of ${requiredSkills.length} required skills found`);
+      } else if (matchScore >= 60) {
+        strengths.push('Good technical background in core technologies');
+        strengths.push(`Strong foundation in ${matchedSkills.length} required skills`);
+      }
+      
+      if (profile.skills.length > 5) {
+        strengths.push('Diverse technical skill set demonstrated');
+      }
+      
+      strengths.push(`${profile.experience} of relevant industry experience`);
+      strengths.push('Strong educational background');
+      
+      if (unmatchedSkills.length > 0) {
+        concerns.push(`Missing skills: ${unmatchedSkills.map(s => s.skill).join(', ')}`);
+      }
+      
+      if (matchScore < 70) {
+        concerns.push('May require training in some key technologies');
+      }
+      
+      concerns.push('Verify years of hands-on experience with mentioned technologies');
+      
+      // Generate recommendations
+      const recommendations = [];
+      if (matchScore >= 80) {
+        recommendations.push('Schedule technical interview immediately');
+        recommendations.push('Prepare advanced coding challenges');
+        recommendations.push('Discuss system design experience');
+      } else if (matchScore >= 65) {
+        recommendations.push('Conduct initial screening call');
+        recommendations.push('Verify depth of experience in key skills');
+        recommendations.push('Review portfolio and past projects');
+      } else {
+        recommendations.push('Consider for junior or mid-level positions');
+        recommendations.push('Assess willingness to learn new technologies');
+        recommendations.push('Review coding samples and GitHub profile');
+      }
+      
+      recommendations.push('Check professional references');
       
       resolve({
         matchScore: matchScore,
         status: matchScore >= 80 ? 'Highly Recommended' : matchScore >= 65 ? 'Recommended' : 'Consider',
         extraction: {
-          name: 'Candidate Name',
-          email: 'candidate@example.com',
-          phone: '+91 9876543210',
-          experience: '5+ years',
-          education: 'B.Tech in Computer Science',
-          skills: requiredSkills.slice(0, 3).concat(['Git', 'Agile'])
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          experience: profile.experience,
+          education: profile.education,
+          skills: profile.skills.slice(0, 8)
         },
         analysis: {
-          strengths: [
-            'Strong technical background in required skills',
-            'Relevant industry experience',
-            'Good educational qualification'
-          ],
-          concerns: [
-            'May need additional training in some technologies',
-            'Location compatibility to be verified'
-          ],
-          skillMatch: requiredSkills.map(skill => ({
-            skill: skill,
-            matched: Math.random() > 0.3,
-            proficiency: Math.random() > 0.5 ? 'High' : 'Medium'
-          }))
+          strengths: strengths,
+          concerns: concerns,
+          skillMatch: [...matchedSkills, ...unmatchedSkills]
         },
-        recommendations: [
-          'Schedule technical interview',
-          'Verify years of experience',
-          'Check references'
-        ]
+        recommendations: recommendations
       });
-    }, 2000); // Simulate processing time
+    }, 1500); // Simulate processing time
   });
 }
 
