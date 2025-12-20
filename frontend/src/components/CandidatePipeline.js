@@ -38,9 +38,19 @@ const CandidatePipeline = () => {
       const data = await response.json();
       
       if (data.success) {
-        setCandidates(data.candidates);
-        setPipeline(data.pipeline);
-        setStats(data.stats);
+        setCandidates(data.candidates || []);
+        setPipeline(data.pipeline || {
+          Applied: [],
+          Shortlisted: [],
+          Interview: [],
+          Offer: [],
+          Hired: []
+        });
+        setStats(data.stats || {
+          totalCandidates: 0,
+          activePipeline: 0
+        });
+        setError(null);
       } else {
         setError(data.message || 'Failed to fetch candidates');
       }
