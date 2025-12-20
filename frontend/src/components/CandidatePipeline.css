@@ -1,7 +1,9 @@
 .candidate-pipeline {
-  padding: 20px;
+  padding: 16px;
   background-color: #f9fafb;
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Pipeline Header */
@@ -9,10 +11,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 30px;
+  margin-bottom: 16px;
   background: white;
-  padding: 20px;
-  border-radius: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -43,11 +45,11 @@
 }
 
 .title-icon {
-  font-size: 32px;
+  font-size: 24px;
   background: #3b82f6;
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,20 +57,20 @@
 
 .pipeline-title h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
   color: #111827;
 }
 
 .pipeline-title p {
   margin: 4px 0 0 0;
-  font-size: 14px;
+  font-size: 12px;
   color: #6b7280;
 }
 
 .pipeline-stats {
   display: flex;
-  gap: 30px;
+  gap: 20px;
 }
 
 .stat-item {
@@ -77,14 +79,14 @@
 
 .stat-label {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-value {
   display: block;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
   color: #111827;
 }
@@ -92,16 +94,17 @@
 /* Pipeline Stages */
 .pipeline-stages {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-bottom: 30px;
+  margin-bottom: 16px;
+  max-width: 100%;
 }
 
 .pipeline-stage {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
-  min-height: 600px;
+  min-height: 300px;
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
@@ -117,61 +120,61 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 2px solid #f3f4f6;
 }
 
 .stage-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .stage-icon {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .stage-name {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: #111827;
 }
 
 .stage-count {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .stage-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .empty-stage {
-  padding: 40px 20px;
+  padding: 24px 12px;
   text-align: center;
   color: #9ca3af;
-  font-size: 14px;
+  font-size: 12px;
   border: 2px dashed #e5e7eb;
-  border-radius: 8px;
-  margin-top: 20px;
+  border-radius: 6px;
+  margin-top: 12px;
 }
 
 /* Candidate Card */
 .candidate-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 10px;
   cursor: grab;
   transition: all 0.2s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -191,20 +194,20 @@
 .candidate-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .candidate-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -214,8 +217,8 @@
 }
 
 .candidate-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 15px;
+  margin: 0 0 2px 0;
+  font-size: 13px;
   font-weight: 600;
   color: #111827;
   white-space: nowrap;
@@ -225,7 +228,7 @@
 
 .candidate-email {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
@@ -235,29 +238,29 @@
 .candidate-position {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 6px;
+  padding: 6px;
   background: #f9fafb;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  font-size: 13px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 11px;
   color: #374151;
 }
 
 .position-icon {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .candidate-fit-score {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .fit-score-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
-  font-size: 13px;
+  margin-bottom: 4px;
+  font-size: 11px;
 }
 
 .fit-score-label span:first-child {
@@ -270,7 +273,7 @@
 }
 
 .fit-score-bar {
-  height: 6px;
+  height: 5px;
   background: #e5e7eb;
   border-radius: 3px;
   overflow: hidden;
@@ -285,24 +288,24 @@
 .candidate-date {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 10px;
   color: #6b7280;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .date-icon {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .candidate-footer {
-  padding-top: 10px;
+  padding-top: 6px;
   border-top: 1px solid #f3f4f6;
 }
 
 .drag-hint {
   margin: 0;
-  font-size: 11px;
+  font-size: 9px;
   color: #9ca3af;
   text-align: center;
 }
@@ -311,33 +314,33 @@
 .pipeline-instructions {
   background: #eff6ff;
   border: 1px solid #dbeafe;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 12px 16px;
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .instruction-icon {
-  font-size: 32px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
 .instruction-content h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+  margin: 0 0 8px 0;
+  font-size: 14px;
   font-weight: 600;
   color: #1e40af;
 }
 
 .instruction-content ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 16px;
   color: #1e40af;
 }
 
 .instruction-content li {
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: 4px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
