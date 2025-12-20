@@ -12,39 +12,7 @@ const ADZUNA_APP_ID = '17d79c26';
 const ADZUNA_APP_KEY = 'eda0bf8d8c2f0f2581b576d038ec09c1';
 const ADZUNA_BASE_URL = 'https://api.adzuna.com/v1/api/jobs/in/search';
 
-// Initialize Offers table
-async function initializeOffersTable() {
-  try {
-    const pool = await getConnection();
-    await pool.request().query(`
-      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Offers' AND xtype='U')
-      CREATE TABLE Offers (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        candidateId INT,
-        candidateName NVARCHAR(255) NOT NULL,
-        jobTitle NVARCHAR(255) NOT NULL,
-        startDate DATE,
-        baseSalary DECIMAL(18,2),
-        signingBonus DECIMAL(18,2),
-        equityShares INT,
-        totalCash DECIMAL(18,2),
-        vacationDays INT,
-        healthBenefits NVARCHAR(255),
-        workArrangement NVARCHAR(255),
-        status NVARCHAR(50) DEFAULT 'draft',
-        createdAt DATETIME DEFAULT GETDATE(),
-        updatedAt DATETIME DEFAULT GETDATE(),
-        approvedAt DATETIME
-      );
-    `);
-    console.log('✅ Offers table initialized');
-  } catch (err) {
-    console.error('❌ Offers table initialization failed:', err.message);
-  }
-}
-
-// Initialize on module load
-initializeOffersTable();
+// No need to initialize - using existing Offers table from database
 
 // Get all candidates from database
 router.get('/api/candidates', async (req, res) => {
@@ -120,22 +88,25 @@ router.get('/api/offers', async (req, res) => {
     const pool = await getConnection();
     const result = await pool.request().query(`
       SELECT 
-        id,
-        candidateId,
-        candidateName,
-        jobTitle,
-        startDate,
-        baseSalary,
-        signingBonus,
-        equityShares,
-        totalCash,
-        vacationDays,
-        healthBenefits,
-        workArrangement,
-        status,
-        createdAt
-      FROM Offers
-      ORDER BY createdAt DESC
+        o.OfferId as id,
+        o.ApplicationId,
+        o.Salary,
+        o.StartDate,
+        o.OfferLetter,
+        o.Status,
+        o.SentDate,
+        o.ResponseDate,
+        o.ExpiryDate,
+        o.Notes,
+        o.CreatedBy,
+        o.CreatedAt as createdAt,
+        o.UpdatedAt as updatedAt,
+        c.name as candidateName,
+        c.position as jobTitle,
+        o.Salary as totalCash
+      FROM [dbo].[Offers] o
+      LEFT JOIN [dbo].[Candidates] c ON o.ApplicationId = c.id
+      ORDER BY o.CreatedAt DESC
     `);
     
     res.json({
@@ -152,13 +123,21 @@ router.get('/api/offers', async (req, res) => {
   }
 });
 
-// Get offer by ID
+// Get a specific offer by ID
 router.get('/api/offers/:id', async (req, res) => {
   try {
     const pool = await getConnection();
     const result = await pool.request()
       .input('id', sql.Int, parseInt(req.params.id))
-      .query('SELECT * FROM Offers WHERE id = @id');
+      .query(`
+        SELECT 
+          o.*,
+          c.name as candidateName,
+          c.position as jobTitle
+        FROM [dbo].[Offers] o
+        LEFT JOIN [dbo].[Candidates] c ON o.ApplicationId = c.id
+        WHERE o.OfferId = @id
+      `);
     
     if (result.recordset.length === 0) {
       return res.status(404).json({
@@ -181,7 +160,7 @@ router.get('/api/offers/:id', async (req, res) => {
   }
 });
 
-// Create new offer
+// Create a new offer
 router.post('/api/offers', async (req, res) => {
   try {
     const {
@@ -195,87 +174,69 @@ router.post('/api/offers', async (req, res) => {
       vacationDays,
       healthBenefits,
       workArrangement,
-      status = 'draft'
+      status = 'Draft'
     } = req.body;
     
     // Validation
-    if (!candidateName || !jobTitle || !baseSalary) {
+    if (!candidateId || !baseSalary) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: candidateName, jobTitle, baseSalary'
+        message: 'Missing required fields: candidateId, baseSalary'
       });
     }
     
-    const totalCash = parseFloat(baseSalary || 0) + parseFloat(signingBonus || 0);
+    const totalSalary = parseFloat(baseSalary || 0) + parseFloat(signingBonus || 0);
     
-    try {
-      const pool = await getConnection();
-      const result = await pool.request()
-        .input('candidateId', sql.Int, candidateId || null)
-        .input('candidateName', sql.NVarChar, candidateName)
-        .input('jobTitle', sql.NVarChar, jobTitle)
-        .input('startDate', sql.Date, startDate || null)
-        .input('baseSalary', sql.Decimal(18, 2), parseFloat(baseSalary))
-        .input('signingBonus', sql.Decimal(18, 2), parseFloat(signingBonus || 0))
-        .input('equityShares', sql.Int, parseInt(equityShares || 0))
-        .input('totalCash', sql.Decimal(18, 2), totalCash)
-        .input('vacationDays', sql.Int, parseInt(vacationDays || 20))
-        .input('healthBenefits', sql.NVarChar, healthBenefits || 'Premium Coverage')
-        .input('workArrangement', sql.NVarChar, workArrangement || 'Hybrid')
-        .input('status', sql.NVarChar, status)
-        .query(`
-          INSERT INTO Offers (
-            candidateId, candidateName, jobTitle, startDate,
-            baseSalary, signingBonus, equityShares, totalCash,
-            vacationDays, healthBenefits, workArrangement, status
-          )
-          OUTPUT INSERTED.*
-          VALUES (
-            @candidateId, @candidateName, @jobTitle, @startDate,
-            @baseSalary, @signingBonus, @equityShares, @totalCash,
-            @vacationDays, @healthBenefits, @workArrangement, @status
-          )
-        `);
-      
-      res.status(201).json({
-        success: true,
-        message: 'Offer created successfully',
-        offer: result.recordset[0]
-      });
-    } catch (dbError) {
-      // Fallback to in-memory storage
-      console.error('Database error, using in-memory storage:', dbError.message);
-      
-      const newOffer = {
-        id: offerIdCounter++,
-        candidateId,
+    // Build offer letter text
+    const offerLetter = `Dear ${candidateName},
+
+We are delighted to offer you the position of ${jobTitle}.
+
+Compensation Package:
+- Base Salary: $${parseFloat(baseSalary).toLocaleString()}
+- Signing Bonus: $${parseFloat(signingBonus || 0).toLocaleString()}
+- Equity Shares: ${equityShares || 0} RSUs
+- Total Cash: $${totalSalary.toLocaleString()}
+
+Benefits & Perks:
+- ${vacationDays || 20} vacation days per year
+- ${healthBenefits || 'Premium Coverage'}
+- ${workArrangement || 'Hybrid'} work arrangement
+- 401(k) matching and professional development budget
+
+Start Date: ${startDate ? new Date(startDate).toLocaleDateString() : 'TBD'}
+
+We look forward to welcoming you to our team!`;
+
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('applicationId', sql.Int, candidateId)
+      .input('salary', sql.Decimal(18, 2), totalSalary)
+      .input('startDate', sql.Date, startDate || null)
+      .input('offerLetter', sql.NVarChar, offerLetter)
+      .input('status', sql.NVarChar, status)
+      .input('notes', sql.NVarChar, `Base: $${baseSalary}, Bonus: $${signingBonus || 0}, Equity: ${equityShares || 0} RSUs`)
+      .input('createdBy', sql.Int, 1)
+      .query(`
+        INSERT INTO [dbo].[Offers] (
+          ApplicationId, Salary, StartDate, OfferLetter, Status, Notes, CreatedBy
+        )
+        OUTPUT INSERTED.*
+        VALUES (
+          @applicationId, @salary, @startDate, @offerLetter, @status, @notes, @createdBy
+        )
+      `);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Offer created successfully',
+      offer: {
+        ...result.recordset[0],
         candidateName,
         jobTitle,
-        startDate,
-        compensation: {
-          baseSalary: parseFloat(baseSalary),
-          signingBonus: parseFloat(signingBonus || 0),
-          equityShares: parseFloat(equityShares || 0),
-          totalCash: totalCash
-        },
-        benefits: {
-          vacationDays: parseInt(vacationDays || 20),
-          healthBenefits: healthBenefits || 'Premium Coverage',
-          workArrangement: workArrangement || 'Hybrid'
-        },
-        status: status,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      offers.push(newOffer);
-      
-      res.status(201).json({
-        success: true,
-        message: 'Offer created successfully',
-        offer: newOffer
-      });
-    }
+        totalCash: totalSalary
+      }
+    });
   } catch (error) {
     console.error('Error creating offer:', error);
     res.status(500).json({
@@ -365,54 +326,30 @@ router.post('/api/offers/:id/approve', async (req, res) => {
   try {
     const offerId = parseInt(req.params.id);
     
-    try {
-      const pool = await getConnection();
-      const result = await pool.request()
-        .input('id', sql.Int, offerId)
-        .query(`
-          UPDATE Offers
-          SET status = 'approved',
-              approvedAt = GETDATE(),
-              updatedAt = GETDATE()
-          OUTPUT INSERTED.*
-          WHERE id = @id
-        `);
-      
-      if (result.recordset.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Offer not found'
-        });
-      }
-      
-      res.json({
-        success: true,
-        message: 'Offer approved and sent successfully',
-        offer: result.recordset[0]
-      });
-    } catch (dbError) {
-      // Fallback to in-memory storage
-      console.error('Database error, using in-memory storage:', dbError.message);
-      
-      const offerIndex = offers.findIndex(o => o.id === offerId);
-      
-      if (offerIndex === -1) {
-        return res.status(404).json({
-          success: false,
-          message: 'Offer not found'
-        });
-      }
-      
-      offers[offerIndex].status = 'approved';
-      offers[offerIndex].approvedAt = new Date().toISOString();
-      offers[offerIndex].updatedAt = new Date().toISOString();
-      
-      res.json({
-        success: true,
-        message: 'Offer approved and sent successfully',
-        offer: offers[offerIndex]
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('id', sql.Int, offerId)
+      .query(`
+        UPDATE [dbo].[Offers]
+        SET Status = 'Approved',
+            SentDate = GETDATE(),
+            UpdatedAt = GETDATE()
+        OUTPUT INSERTED.*
+        WHERE OfferId = @id
+      `);
+    
+    if (result.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Offer not found'
       });
     }
+    
+    res.json({
+      success: true,
+      message: 'Offer approved and sent successfully',
+      offer: result.recordset[0]
+    });
   } catch (error) {
     console.error('Error approving offer:', error);
     res.status(500).json({
@@ -424,19 +361,17 @@ router.post('/api/offers/:id/approve', async (req, res) => {
 });
 
 // Delete an offer
-router.delete('/api/offers/:id', (req, res) => {
+router.delete('/api/offers/:id', async (req, res) => {
   try {
     const offerId = parseInt(req.params.id);
-    const offerIndex = offers.findIndex(o => o.id === offerId);
     
-    if (offerIndex === -1) {
-      return res.status(404).json({
-        success: false,
-        message: 'Offer not found'
-      });
-    }
-    
-    offers.splice(offerIndex, 1);
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('id', sql.Int, offerId)
+      .query(`
+        DELETE FROM [dbo].[Offers]
+        WHERE OfferId = @id
+      `);
     
     res.json({
       success: true,

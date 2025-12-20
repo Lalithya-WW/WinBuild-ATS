@@ -2,35 +2,30 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { uploadFileToBlob, deleteFileFromBlob } = require('../config/azureStorage');
+const { getConnection } = require('../config/database');
 
-// Configure multer for PDF upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
+// Configure multer for memory storage (Azure Blob)
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
+  const allowedMimeTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF files are allowed'), false);
+    cb(new Error('Only PDF, DOC, and DOCX files are allowed'), false);
   }
 };
 
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 // Adzuna API credentials
@@ -144,19 +139,56 @@ router.post('/screen', upload.single('resume'), async (req, res) => {
       });
     }
 
-    const { jobTitle, requiredSkills } = req.body;
+    const { jobTitle, requiredSkills, candidateName, email, phone } = req.body;
     
+    // Upload file to Azure Blob Storage
+    const uploadResult = await uploadFileToBlob(
+      req.file.originalname,
+      req.file.buffer,
+      req.file.mimetype
+    );
+
     // Simulate AI screening analysis
-    // In production, this would integrate with actual AI/ML service
     const screeningResult = await performAIScreening(
-      req.file.path,
+      uploadResult.url,
       jobTitle,
       requiredSkills ? JSON.parse(requiredSkills) : []
     );
 
+    // Save candidate to database with screening results
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('name', candidateName || screeningResult.extraction.name)
+      .input('email', email || screeningResult.extraction.email)
+      .input('phone', phone || screeningResult.extraction.phone)
+      .input('position', jobTitle)
+      .input('resumePath', uploadResult.url)
+      .input('screeningScore', screeningResult.matchScore)
+      .query(`
+        INSERT INTO Candidates (name, email, phone, position, status, resumePath)
+        OUTPUT INSERTED.*
+        VALUES (@name, @email, @phone, @position, 'screening', @resumePath)
+      `);
+
+    const newCandidate = result.recordset[0];
+
+    // Add activity
+    await pool.request()
+      .input('title', 'Resume Screened')
+      .input('description', `${candidateName || screeningResult.extraction.name} - Score: ${screeningResult.matchScore}%`)
+      .query(`
+        INSERT INTO Activities (type, title, description, icon)
+        VALUES ('screening', @title, @description, 'file-search')
+      `);
+
     res.json({
       success: true,
-      result: screeningResult
+      result: {
+        ...screeningResult,
+        candidateId: newCandidate.id,
+        resumeUrl: uploadResult.url,
+        blobName: uploadResult.blobName
+      }
     });
   } catch (error) {
     console.error('Error screening resume:', error.message);
@@ -191,9 +223,9 @@ function extractSkills(description) {
 }
 
 // Simulate AI screening (placeholder for actual AI integration)
-async function performAIScreening(filePath, jobTitle, requiredSkills) {
+async function performAIScreening(blobUrl, jobTitle, requiredSkills) {
   // This is a simulation. In production, you would:
-  // 1. Parse the PDF to extract text
+  // 1. Download the file from blob URL or pass the URL to AI service
   // 2. Use NLP/AI to extract candidate information
   // 3. Match skills and experience against job requirements
   // 4. Generate a detailed analysis and score

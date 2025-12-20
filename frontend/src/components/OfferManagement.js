@@ -186,6 +186,12 @@ const OfferManagement = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
+      Draft: { class: 'status-draft', text: 'Draft' },
+      Approved: { class: 'status-approved', text: 'Approved' },
+      Sent: { class: 'status-sent', text: 'Sent' },
+      Accepted: { class: 'status-accepted', text: 'Accepted' },
+      Rejected: { class: 'status-rejected', text: 'Rejected' },
+      // Lowercase variants for compatibility
       draft: { class: 'status-draft', text: 'Draft' },
       approved: { class: 'status-approved', text: 'Approved' },
       sent: { class: 'status-sent', text: 'Sent' },
@@ -276,13 +282,13 @@ const OfferManagement = () => {
                   </thead>
                   <tbody>
                     {offers.map((offer) => (
-                      <tr key={offer.id}>
+                      <tr key={offer.id || offer.OfferId}>
                         <td><strong>{offer.candidateName}</strong></td>
                         <td>{offer.jobTitle}</td>
-                        <td className="amount">{formatCurrency(offer.totalCash || offer.baseSalary)}</td>
-                        <td>{formatDate(offer.startDate)}</td>
-                        <td>{getStatusBadge(offer.status)}</td>
-                        <td>{formatDate(offer.createdAt)}</td>
+                        <td className="amount">{formatCurrency(offer.totalCash || offer.Salary || 0)}</td>
+                        <td>{formatDate(offer.startDate || offer.StartDate)}</td>
+                        <td>{getStatusBadge(offer.status || offer.Status)}</td>
+                        <td>{formatDate(offer.createdAt || offer.CreatedAt)}</td>
                       </tr>
                     ))}
                   </tbody>
