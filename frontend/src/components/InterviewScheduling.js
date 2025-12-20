@@ -27,10 +27,10 @@ const InterviewScheduling = ({ onBack }) => {
     try {
       setLoading(true);
       const [candidatesRes, jobsRes, panelRes, interviewsRes] = await Promise.all([
-        fetch('http://localhost:5001/api/interview-scheduling/candidates'),
-        fetch('http://localhost:5001/api/interview-scheduling/jobs'),
-        fetch('http://localhost:5001/api/interview-scheduling/panel-members'),
-        fetch('http://localhost:5001/api/interview-scheduling/scheduled')
+        fetch('http://localhost:5000/api/interview-scheduling/candidates'),
+        fetch('http://localhost:5000/api/interview-scheduling/jobs'),
+        fetch('http://localhost:5000/api/interview-scheduling/panel-members'),
+        fetch('http://localhost:5000/api/interview-scheduling/scheduled')
       ]);
 
       const candidatesData = await candidatesRes.json();
@@ -98,7 +98,7 @@ const InterviewScheduling = ({ onBack }) => {
         additionalNotes
       };
 
-      const response = await fetch('http://localhost:5001/api/interview-scheduling/schedule', {
+      const response = await fetch('http://localhost:5000/api/interview-scheduling/schedule', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

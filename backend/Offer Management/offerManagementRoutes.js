@@ -248,7 +248,7 @@ We look forward to welcoming you to our team!`;
 });
 
 // Update an existing offer
-router.put('/api/offers/:id', (req, res) => {
+router.put('/api/offers/:id', async (req, res) => {
   try {
     const offerId = parseInt(req.params.id);
     const offerIndex = offers.findIndex(o => o.id === offerId);

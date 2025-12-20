@@ -1,11 +1,16 @@
 import React from 'react';
 import { Bell, LogOut } from 'lucide-react';
+import { useMsal } from '@azure/msal-react';
 import './Header.css';
 
 const Header = ({ user }) => {
+  const { instance } = useMsal();
+
   const handleLogout = () => {
-    // Handle logout logic
-    console.log('Logout clicked');
+    instance.logoutPopup({
+      postLogoutRedirectUri: "/",
+      mainWindowRedirectUri: "/"
+    });
   };
 
   return (

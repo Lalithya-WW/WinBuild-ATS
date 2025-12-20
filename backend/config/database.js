@@ -44,6 +44,22 @@ async function initializeDatabase() {
     
     // Create tables if they don't exist
     await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Users' AND xtype='U')
+      CREATE TABLE Users (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        azureId NVARCHAR(255) UNIQUE NOT NULL,
+        email NVARCHAR(255) NOT NULL,
+        name NVARCHAR(255),
+        firstName NVARCHAR(100),
+        lastName NVARCHAR(100),
+        role NVARCHAR(50) DEFAULT 'Recruiter',
+        lastLogin DATETIME DEFAULT GETDATE(),
+        createdAt DATETIME DEFAULT GETDATE(),
+        updatedAt DATETIME DEFAULT GETDATE()
+      );
+    `);
+
+    await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Jobs' AND xtype='U')
       CREATE TABLE Jobs (
         id INT IDENTITY(1,1) PRIMARY KEY,
@@ -51,6 +67,8 @@ async function initializeDatabase() {
         department NVARCHAR(255),
         location NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'open',
+        createdBy INT,
+        updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
         updatedAt DATETIME DEFAULT GETDATE()
       );
@@ -65,7 +83,9 @@ async function initializeDatabase() {
         phone NVARCHAR(50),
         position NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'active',
-        resumePath NVARCHAR(500),
+        resumePath NVARCHAR(1000),
+        createdBy INT,
+        updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),
         updatedAt DATETIME DEFAULT GETDATE()
       );
@@ -82,7 +102,10 @@ async function initializeDatabase() {
         interviewType NVARCHAR(100),
         status NVARCHAR(50) DEFAULT 'scheduled',
         feedback NVARCHAR(MAX),
-        createdAt DATETIME DEFAULT GETDATE()
+        createdBy INT,
+        updatedBy INT,
+        createdAt DATETIME DEFAULT GETDATE(),
+        updatedAt DATETIME DEFAULT GETDATE()
       );
     `);
 
@@ -94,6 +117,7 @@ async function initializeDatabase() {
         title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX),
         icon NVARCHAR(50),
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);
@@ -107,6 +131,7 @@ async function initializeDatabase() {
         description NVARCHAR(MAX),
         priority NVARCHAR(20) DEFAULT 'medium',
         isRead BIT DEFAULT 0,
+        createdBy INT,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);

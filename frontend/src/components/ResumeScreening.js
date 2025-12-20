@@ -5,6 +5,11 @@ const ResumeScreening = ({ onBack }) => {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
+  const [candidateInfo, setCandidateInfo] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [screeningResult, setScreeningResult] = useState(null);
@@ -82,6 +87,9 @@ const ResumeScreening = ({ onBack }) => {
     formData.append('resume', resumeFile);
     formData.append('jobTitle', selectedJob.title);
     formData.append('requiredSkills', JSON.stringify(selectedJob.requiredSkills || []));
+    formData.append('candidateName', candidateInfo.name);
+    formData.append('email', candidateInfo.email);
+    formData.append('phone', candidateInfo.phone);
 
     try {
       const response = await fetch('/api/resume-screening/screen', {
@@ -93,6 +101,14 @@ const ResumeScreening = ({ onBack }) => {
       
       if (data.success) {
         setScreeningResult(data.result);
+        // Update candidate info from extraction if not provided
+        if (!candidateInfo.name && data.result.extraction) {
+          setCandidateInfo({
+            name: data.result.extraction.name || '',
+            email: data.result.extraction.email || candidateInfo.email,
+            phone: data.result.extraction.phone || candidateInfo.phone
+          });
+        }
       } else {
         setError(data.message || 'Failed to screen resume');
       }
@@ -292,6 +308,52 @@ const ResumeScreening = ({ onBack }) => {
             </div>
 
             {error && <div className="error-message">{error}</div>}
+          </div>
+
+          <div className="section-card">
+            <div className="section-header">
+              <div>
+                <h2>Candidate Information (Optional)</h2>
+                <p>AI will extract this from resume if not provided</p>
+              </div>
+              <div className="section-icon">👤</div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="candidateName">Name</label>
+              <input
+                type="text"
+                id="candidateName"
+                value={candidateInfo.name}
+                onChange={(e) => setCandidateInfo({...candidateInfo, name: e.target.value})}
+                placeholder="Candidate name"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="candidateEmail">Email</label>
+              <input
+                type="email"
+                id="candidateEmail"
+                value={candidateInfo.email}
+                onChange={(e) => setCandidateInfo({...candidateInfo, email: e.target.value})}
+                placeholder="candidate@email.com"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="candidatePhone">Phone</label>
+              <input
+                type="tel"
+                id="candidatePhone"
+                value={candidateInfo.phone}
+                onChange={(e) => setCandidateInfo({...candidateInfo, phone: e.target.value})}
+                placeholder="+91 9876543210"
+                className="form-input"
+              />
+            </div>
           </div>
 
           <button 

@@ -47,7 +47,7 @@ Winbuild-ATS/
    ```bash
    npm run dev
    ```
-   Server runs on http://localhost:5001
+   Server runs on http://localhost:5000
 
 ### Frontend Setup
 
