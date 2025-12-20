@@ -9,6 +9,11 @@ import DemoMode from './components/DemoMode';
 import JobsList from './components/JobsList';
 import CandidatesList from './components/CandidatesList';
 import InterviewsList from './components/InterviewsList';
+import ResumeScreening from './components/ResumeScreening';
+import CandidatePipeline from './components/CandidatePipeline';
+import InterviewScheduling from './components/InterviewScheduling';
+import InterviewFeedback from './components/InterviewFeedback';
+import OfferManagement from './components/OfferManagement';
 import * as api from './services/api';
 
 function App() {
@@ -18,6 +23,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showResumeScreening, setShowResumeScreening] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -106,7 +112,34 @@ function App() {
             className={`tab ${activeTab === 'interviews' ? 'active' : ''}`}
             onClick={() => setActiveTab('interviews')}
           >
-            Interviews
+            Interview Scheduling
+          </button>
+          <button 
+            className={`tab ${activeTab === 'resumeScreening' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('resumeScreening');
+              setShowResumeScreening(true);
+            }}
+          >
+            AI Resume Screening
+          </button>
+          <button 
+            className={`tab ${activeTab === 'pipeline' ? 'active' : ''}`}
+            onClick={() => setActiveTab('pipeline')}
+          >
+            Candidate Pipeline
+          </button>
+          <button 
+            className={`tab ${activeTab === 'feedback' ? 'active' : ''}`}
+            onClick={() => setActiveTab('feedback')}
+          >
+            Interview Feedback
+          </button>
+          <button 
+            className={`tab ${activeTab === 'offers' ? 'active' : ''}`}
+            onClick={() => setActiveTab('offers')}
+          >
+            Offer Management
           </button>
         </div>
 
@@ -132,7 +165,26 @@ function App() {
 
         {activeTab === 'jobs' && <JobsList />}
         {activeTab === 'candidates' && <CandidatesList />}
-        {activeTab === 'interviews' && <InterviewsList />}
+        {activeTab === 'interviews' && <InterviewScheduling />}
+        {activeTab === 'pipeline' && <CandidatePipeline />}
+        {activeTab === 'feedback' && (
+          <InterviewFeedback 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
+        {activeTab === 'resumeScreening' && (
+          <ResumeScreening 
+            onBack={() => {
+              setActiveTab('dashboard');
+              setShowResumeScreening(false);
+            }}
+          />
+        )}
+        {activeTab === 'offers' && (
+          <OfferManagement 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
 
         <DemoMode />
       </main>

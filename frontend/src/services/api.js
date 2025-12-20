@@ -69,7 +69,7 @@ export const getCandidateById = async (id) => {
 };
 
 export const createCandidate = async (candidateData) => {
-  const response = await axios.post(`${API_BASE_URL}/api/resumes`, candidateData);
+  const response = await axios.post(`${API_BASE_URL}/api/candidates`, candidateData);
   return response.data;
 };
 
@@ -115,6 +115,50 @@ export const getDatabaseTables = async () => {
   return response.data;
 };
 
+// Offer Management
+export const getOfferJobs = async (params = {}) => {
+  const { what = 'software', where = 'India' } = params;
+  const response = await axios.get(`${API_BASE_URL}/api/offers/api/jobs`, {
+    params: { what, where }
+  });
+  return response.data;
+};
+
+export const getCandidatesForOffers = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/offers/api/candidates`);
+  return response.data;
+};
+
+export const getOffers = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/offers/api/offers`);
+  return response.data;
+};
+
+export const getOfferById = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/api/offers/api/offers/${id}`);
+  return response.data;
+};
+
+export const createOffer = async (offerData) => {
+  const response = await axios.post(`${API_BASE_URL}/api/offers/api/offers`, offerData);
+  return response.data;
+};
+
+export const updateOffer = async (id, offerData) => {
+  const response = await axios.put(`${API_BASE_URL}/api/offers/api/offers/${id}`, offerData);
+  return response.data;
+};
+
+export const approveOffer = async (id) => {
+  const response = await axios.post(`${API_BASE_URL}/api/offers/api/offers/${id}/approve`);
+  return response.data;
+};
+
+export const deleteOffer = async (id) => {
+  const response = await axios.delete(`${API_BASE_URL}/api/offers/api/offers/${id}`);
+  return response.data;
+};
+
 export default {
   // Stats
   getStats,
@@ -145,5 +189,15 @@ export default {
   deleteInterview,
   
   // Database
-  getDatabaseTables
+  getDatabaseTables,
+  
+  // Offer Management
+  getOfferJobs,
+  getCandidatesForOffers,
+  getOffers,
+  getOfferById,
+  createOffer,
+  updateOffer,
+  approveOffer,
+  deleteOffer
 };
