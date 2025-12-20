@@ -20,6 +20,7 @@ import JobCreation from './components/JobCreation';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import AzureLogin from './components/AzureLogin';
 import ResumeUpload from './components/ResumeUpload';
+import OnboardingHandoff from './components/OnboardingHandoff';
 import * as api from './services/api';
 import { msalInstance, loginRequest } from './authConfig';
 
@@ -185,6 +186,12 @@ function Dashboard() {
             Offer Management
           </button>
           <button 
+            className={`tab ${activeTab === 'onboarding' ? 'active' : ''}`}
+            onClick={() => setActiveTab('onboarding')}
+          >
+            Onboarding Handoff
+          </button>
+          <button 
             className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
@@ -247,6 +254,12 @@ function Dashboard() {
         )}
         {activeTab === 'offers' && (
           <OfferManagement 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
+        {activeTab === 'onboarding' && (
+          <OnboardingHandoff 
+            candidateId={1}
             onBack={() => setActiveTab('dashboard')}
           />
         )}

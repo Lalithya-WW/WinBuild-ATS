@@ -67,6 +67,10 @@ app.use('/api/interview-feedback', interviewFeedbackRoutes);
 // const offerManagementRoutes = require('./Offer Management/offerManagementRoutes');
 // app.use('/api/offers', offerManagementRoutes);
 
+// Onboarding Routes
+const onboardingRoutes = require('./routes/onboarding');
+app.use(onboardingRoutes);
+
 // Job Creation Routes
 const jobRoutes = require('./routes/jobs');
 app.use('/api/jobs', jobRoutes);
