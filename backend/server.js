@@ -10,7 +10,7 @@ const { getConnection, initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/auth');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
@@ -38,6 +38,26 @@ app.use(passport.session());
 
 // Auth routes
 app.use('/auth', authRoutes);
+
+// Resume Screening Routes
+const resumeScreeningRoutes = require('./Resume Screening/resumeScreeningRoutes');
+app.use('/api/resume-screening', resumeScreeningRoutes);
+
+// Candidate Pipeline Routes
+const candidatePipelineRoutes = require('./Candidate Pipeline/candidatePipelineRoutes');
+app.use('/api/candidate-pipeline', candidatePipelineRoutes);
+
+// Interview Scheduling Routes
+const interviewSchedulingRoutes = require('./Interview Scheduling Screen/interviewSchedulingRoutes');
+app.use('/api/interview-scheduling', interviewSchedulingRoutes);
+
+// Interview Feedback Routes
+const interviewFeedbackRoutes = require('./Interview Feedback/interviewFeedbackRoutes');
+app.use('/api/interview-feedback', interviewFeedbackRoutes);
+
+// Offer Management Routes
+const offerManagementRoutes = require('./Offer Management/offerManagementRoutes');
+app.use('/api/offers', offerManagementRoutes);
 
 // Mock Data
 const mockData = {
@@ -374,6 +394,43 @@ app.get('/api/candidates', async (req, res) => {
   } catch (err) {
     console.error('Error fetching candidates:', err);
     res.status(500).json({ error: 'Failed to fetch candidates' });
+  }
+});
+
+// Create new candidate
+app.post('/api/candidates', async (req, res) => {
+  const { name, email, phone, position, status } = req.body;
+  try {
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('name', name)
+      .input('email', email)
+      .input('phone', phone)
+      .input('position', position)
+      .input('status', status || 'active')
+      .query(`
+        INSERT INTO Candidates (name, email, phone, position, status)
+        OUTPUT INSERTED.*
+        VALUES (@name, @email, @phone, @position, @status)
+      `);
+    
+    // Also log activity
+    await pool.request()
+      .input('title', `New Candidate Added`)
+      .input('description', `${name} applied for ${position}`)
+      .query(`
+        INSERT INTO Activities (type, title, description, icon)
+        VALUES ('application', @title, @description, 'user-plus')
+      `);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Candidate added successfully',
+      candidate: result.recordset[0]
+    });
+  } catch (err) {
+    console.error('Error creating candidate:', err);
+    res.status(500).json({ error: 'Failed to create candidate' });
   }
 });
 

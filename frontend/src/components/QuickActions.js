@@ -6,7 +6,13 @@ const QuickActions = ({ onCreateJob, onUploadResume }) => {
   const [showJobModal, setShowJobModal] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [jobData, setJobData] = useState({ title: '', department: '', location: '' });
-  const [resumeData, setResumeData] = useState({ candidateName: '', position: '' });
+  const [resumeData, setResumeData] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    position: '', 
+    status: 'active' 
+  });
 
   const handleCreateJob = (e) => {
     e.preventDefault();
@@ -18,7 +24,13 @@ const QuickActions = ({ onCreateJob, onUploadResume }) => {
   const handleUploadResume = (e) => {
     e.preventDefault();
     onUploadResume(resumeData);
-    setResumeData({ candidateName: '', position: '' });
+    setResumeData({ 
+      name: '', 
+      email: '', 
+      phone: '', 
+      position: '', 
+      status: 'active' 
+    });
     setShowResumeModal(false);
   };
 
@@ -91,25 +103,51 @@ const QuickActions = ({ onCreateJob, onUploadResume }) => {
       {showResumeModal && (
         <div className="modal-overlay" onClick={() => setShowResumeModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Upload Resume</h2>
+            <h2>Add New Candidate</h2>
             <form onSubmit={handleUploadResume}>
               <input
                 type="text"
                 placeholder="Candidate Name"
-                value={resumeData.candidateName}
-                onChange={(e) => setResumeData({ ...resumeData, candidateName: e.target.value })}
+                value={resumeData.name}
+                onChange={(e) => setResumeData({ ...resumeData, name: e.target.value })}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={resumeData.email}
+                onChange={(e) => setResumeData({ ...resumeData, email: e.target.value })}
+                required
+              />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={resumeData.phone}
+                onChange={(e) => setResumeData({ ...resumeData, phone: e.target.value })}
                 required
               />
               <input
                 type="text"
-                placeholder="Position"
+                placeholder="Position Applied For"
                 value={resumeData.position}
                 onChange={(e) => setResumeData({ ...resumeData, position: e.target.value })}
                 required
               />
+              <select
+                value={resumeData.status}
+                onChange={(e) => setResumeData({ ...resumeData, status: e.target.value })}
+                required
+              >
+                <option value="active">Active</option>
+                <option value="screening">Screening</option>
+                <option value="interviewing">Interviewing</option>
+                <option value="offer">Offer Extended</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowResumeModal(false)}>Cancel</button>
-                <button type="submit" className="primary">Upload</button>
+                <button type="submit" className="primary">Add Candidate</button>
               </div>
             </form>
           </div>
