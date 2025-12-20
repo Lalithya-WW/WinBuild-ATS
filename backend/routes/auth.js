@@ -82,7 +82,7 @@ router.post('/callback',
   }),
   (req, res) => {
     // Successful authentication, redirect to frontend
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}?authenticated=true`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}?authenticated=true`);
   }
 );
 

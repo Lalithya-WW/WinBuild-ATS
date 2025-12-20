@@ -123,7 +123,7 @@ const CandidatePipeline = () => {
 
     // Call API to update backend
     try {
-      await fetch(`http://localhost:5001/api/candidate-pipeline/${draggedCandidate.id}`, {
+      await fetch(`http://localhost:5000/api/candidate-pipeline/${draggedCandidate.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

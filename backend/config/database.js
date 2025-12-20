@@ -88,7 +88,7 @@ async function initializeDatabase() {
         phone NVARCHAR(50),
         position NVARCHAR(255),
         status NVARCHAR(50) DEFAULT 'active',
-        resumePath NVARCHAR(500),
+        resumePath NVARCHAR(1000),
         createdBy INT,
         updatedBy INT,
         createdAt DATETIME DEFAULT GETDATE(),

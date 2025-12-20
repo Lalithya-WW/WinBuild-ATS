@@ -19,6 +19,7 @@ import OfferManagement from './components/OfferManagement';
 import JobCreation from './components/JobCreation';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import AzureLogin from './components/AzureLogin';
+import ResumeUpload from './components/ResumeUpload';
 import * as api from './services/api';
 import { msalInstance, loginRequest } from './authConfig';
 
@@ -189,6 +190,12 @@ function Dashboard() {
           >
             Analytics
           </button>
+          <button 
+            className={`tab ${activeTab === 'uploadResume' ? 'active' : ''}`}
+            onClick={() => setActiveTab('uploadResume')}
+          >
+            Upload Resume
+          </button>
         </div>
 
         {activeTab === 'dashboard' && (
@@ -241,6 +248,14 @@ function Dashboard() {
         {activeTab === 'offers' && (
           <OfferManagement 
             onBack={() => setActiveTab('dashboard')}
+          />
+        )}
+        {activeTab === 'uploadResume' && (
+          <ResumeUpload 
+            onUploadSuccess={() => {
+              setActiveTab('candidates');
+              fetchDashboardData();
+            }}
           />
         )}
 

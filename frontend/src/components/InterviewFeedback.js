@@ -28,7 +28,7 @@ const InterviewFeedback = ({ onBack }) => {
   const fetchInterviews = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/interview-feedback/interviews');
+      const response = await fetch('http://localhost:5000/api/interview-feedback/interviews');
       const data = await response.json();
       setInterviews(data);
       if (data.length > 0) {
@@ -44,7 +44,7 @@ const InterviewFeedback = ({ onBack }) => {
   const fetchSubmittedFeedbacks = async () => {
     try {
       setLoadingFeedbacks(true);
-      const response = await fetch('http://localhost:5001/api/interview-feedback/feedbacks');
+      const response = await fetch('http://localhost:5000/api/interview-feedback/feedbacks');
       const data = await response.json();
       setSubmittedFeedbacks(data);
     } catch (error) {
@@ -104,7 +104,7 @@ const InterviewFeedback = ({ onBack }) => {
 
     try {
       setSubmitting(true);
-      const response = await fetch('http://localhost:5001/api/interview-feedback/feedback', {
+      const response = await fetch('http://localhost:5000/api/interview-feedback/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
