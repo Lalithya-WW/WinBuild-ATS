@@ -132,7 +132,28 @@ router.get('/api/offers', async (req, res) => {
         vacationDays,
         healthBenefits,
         workArrangement,
-        status,async (req, res) => {
+        status,
+        createdAt
+      FROM Offers
+      ORDER BY createdAt DESC
+    `);
+    
+    res.json({
+      success: true,
+      offers: result.recordset
+    });
+  } catch (error) {
+    console.error('Error fetching offers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch offers',
+      error: error.message
+    });
+  }
+});
+
+// Get offer by ID
+router.get('/api/offers/:id', async (req, res) => {
   try {
     const pool = await getConnection();
     const result = await pool.request()
@@ -152,36 +173,16 @@ router.get('/api/offers', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching offer:', error);
-    // Fallback to in-memory storage
-    const offer = offers.find(o => o.id === parseInt(req.params.id));
-    
-    if (!offer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Offer not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      offer: offer
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch offer',
+      error: error.message
+    });
+  }
+});
 
-// Get a specific offer by ID
-router.get('/api/offers/:id', (req, res) => {
-  try {
-    const offer = offers.find(o => o.id === parseInt(req.params.id));
-    
-    if (!offer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Offer not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      offer: offer
-    });async (req, res) => {
+// Create new offer
+router.post('/api/offers', async (req, res) => {
   try {
     const {
       candidateId,
@@ -274,19 +275,7 @@ router.get('/api/offers/:id', (req, res) => {
         message: 'Offer created successfully',
         offer: newOffer
       });
-    },
-      status: status,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    offers.push(newOffer);
-    
-    res.status(201).json({
-      success: true,
-      message: 'Offer created successfully',
-      offer: newOffer
-    });
+    }
   } catch (error) {
     console.error('Error creating offer:', error);
     res.status(500).json({
@@ -298,7 +287,7 @@ router.get('/api/offers/:id', (req, res) => {
 });
 
 // Update an existing offer
-router.put('/api/offers/:id', (req, res) => {
+router.put('/api/offers/:id', async (req, res) => {
   try {
     const offerId = parseInt(req.params.id);
     const offerIndex = offers.findIndex(o => o.id === offerId);
