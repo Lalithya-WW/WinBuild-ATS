@@ -147,19 +147,18 @@ function Dashboard() {
             Candidates
           </button>
           <button 
+            className={`tab ${activeTab === 'resumeScreening' ? 'active' : ''}`}
+            onClick={() => {
+              window.open('http://127.0.0.1:5001', '_blank');
+            }}
+          >
+            AI Resume Screening
+          </button>
+          <button 
             className={`tab ${activeTab === 'interviews' ? 'active' : ''}`}
             onClick={() => setActiveTab('interviews')}
           >
             Interview Scheduling
-          </button>
-          <button 
-            className={`tab ${activeTab === 'resumeScreening' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('resumeScreening');
-              setShowResumeScreening(true);
-            }}
-          >
-            AI Resume Screening
           </button>
           <button 
             className={`tab ${activeTab === 'pipeline' ? 'active' : ''}`}
